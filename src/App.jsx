@@ -77,6 +77,7 @@ export default function ValentineWebsite() {
 
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-gradient-to-br from-pink-100 to-rose-200 flex items-center justify-center">
+      <Analytics />
       <canvas ref={canvasRef} className="absolute inset-0" />
 
       {!accepted ? (
