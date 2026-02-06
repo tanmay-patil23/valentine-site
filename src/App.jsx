@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
+import { Analytics } from "@vercel/analytics/react";
 
 export default function ValentineWebsite() {
   const canvasRef = useRef(null);
@@ -124,6 +125,7 @@ export default function ValentineWebsite() {
           </p>
         </motion.div>
       )}
+      <Analytics />
     </div>
   );
 }
