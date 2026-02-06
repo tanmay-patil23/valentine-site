@@ -1,44 +1,55 @@
 import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
+import confetti from "canvas-confetti";
 
 export default function ValentineWebsite() {
   const canvasRef = useRef(null);
-  const [noPosition, setNoPosition] = useState({ top: "60%", left: "55%" });
-  const [accepted, setAccepted] = useState(false);
+  const audioRef = useRef(null);
 
-  useEffect(() => {
+  const [accepted, setAccepted] = useState(false);
+  const [noPosition, setNoPosition] = useState({
+    top: "65%",
+    left: "55%",
+    position: "absolute",
+  });
+
+   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
 
     let hearts = [];
-    const heartCount = 80;
+    let animationId;
 
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    const heartCount = 100;
+
+    const resizeCanvas = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      createHearts();
+    };
 
     const createHearts = () => {
-      hearts = [];
-      for (let i = 0; i < heartCount; i++) {
-        hearts.push({
-          x: Math.random() * canvas.width,
-          y: Math.random() * canvas.height,
-          size: Math.random() * 20 + 10,
-          speed: Math.random() * 0.5 + 0.2,
-        });
-      }
+      hearts = Array.from({ length: heartCount }).map(() => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        size: Math.random() * 18 + 8,
+        speed: Math.random() * 0.7 + 0.3,
+      }));
     };
 
     const drawHeart = (x, y, size) => {
       ctx.save();
       ctx.translate(x, y);
       ctx.scale(size / 20, size / 20);
+
       ctx.beginPath();
       ctx.moveTo(0, 0);
       ctx.bezierCurveTo(0, -3, -5, -3, -5, 0);
       ctx.bezierCurveTo(-5, 3, 0, 5, 0, 7);
       ctx.bezierCurveTo(0, 5, 5, 3, 5, 0);
       ctx.bezierCurveTo(5, -3, 0, -3, 0, 0);
-      ctx.fillStyle = "rgba(255,105,180,0.8)";
+
+      ctx.fillStyle = "rgba(255,105,180,0.85)";
       ctx.fill();
       ctx.restore();
     };
@@ -48,63 +59,108 @@ export default function ValentineWebsite() {
 
       hearts.forEach((heart) => {
         heart.y -= heart.speed;
-        if (heart.y < -10) heart.y = canvas.height + 10;
+
+        if (heart.y < -20) {
+          heart.y = canvas.height + 20;
+          heart.x = Math.random() * canvas.width;
+        }
+
         drawHeart(heart.x, heart.y, heart.size);
       });
 
-      requestAnimationFrame(animate);
+      animationId = requestAnimationFrame(animate);
     };
 
-    createHearts();
+    resizeCanvas();
     animate();
 
-    const handleResize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      createHearts();
-    };
+    window.addEventListener("resize", resizeCanvas);
 
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    return () => {
+      cancelAnimationFrame(animationId);
+      window.removeEventListener("resize", resizeCanvas);
+    };
   }, []);
 
+ 
   const moveNoButton = () => {
-    const randomTop = Math.random() * 70 + 10;
-    const randomLeft = Math.random() * 70 + 10;
-    setNoPosition({ top: `${randomTop}%`, left: `${randomLeft}%` });
+    const randomX = Math.random() * (window.innerWidth - 120);
+    const randomY = Math.random() * (window.innerHeight - 60);
+
+    setNoPosition({
+      position: "fixed",
+      left: randomX + "px",
+      top: randomY + "px",
+    });
+  };
+
+ 
+  const handleYesClick = () => {
+    confetti({
+      particleCount: 250,
+      spread: 140,
+      origin: { y: 0.6 },
+    });
+
+   
+    audioRef.current?.play();
+
+    setAccepted(true);
   };
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-gradient-to-br from-pink-100 to-rose-200 flex items-center justify-center">
-      <canvas ref={canvasRef} className="absolute inset-0" />
+    <div className="relative w-screen h-screen overflow-hidden flex items-center justify-center bg-gradient-to-br from-pink-200 via-rose-100 to-pink-300">
+
+     
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 z-0 pointer-events-none"
+      />
+
+     
+      <audio ref={audioRef} loop>
+        <source src="/love.mp3" type="audio/mp3" />
+      </audio>
 
       {!accepted ? (
         <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.6 }}
-          className="relative bg-white/90 backdrop-blur-lg rounded-3xl shadow-2xl p-10 text-center max-w-md"
+          initial={{ scale: 0.4, opacity: 0, y: 120 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          transition={{ duration: 0.9, type: "spring" }}
+          className="relative z-10 
+          bg-white/90 backdrop-blur-xl 
+          rounded-3xl shadow-2xl 
+          p-6 sm:p-10
+          w-[90%] max-w-md
+          text-center"
         >
-          <h1 className="text-3xl font-bold text-pink-600 mb-4">
+          <h1 className="text-2xl sm:text-3xl font-bold text-pink-600 mb-4">
             Will you be my Valentine? ❤️
           </h1>
 
           <p className="text-gray-600 mb-8">
-            Warning: Clicking "Yes" may cause extreme happiness 😌
+            Warning: Clicking YES may cause extreme happiness 😌
           </p>
 
           <div className="flex justify-center gap-6 relative h-24">
-            <button
-              onClick={() => setAccepted(true)}
-              className="px-6 py-3 bg-pink-500 hover:bg-pink-600 text-white font-semibold rounded-2xl shadow-lg transition"
+            
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              whileHover={{ scale: 1.1 }}
+              onClick={handleYesClick}
+              className="px-6 py-3 bg-pink-500 hover:bg-pink-600 
+              text-white font-semibold rounded-2xl shadow-lg 
+              transition"
             >
               Yes 💘
-            </button>
+            </motion.button>
 
+          
             <button
               onMouseEnter={moveNoButton}
-              style={{ position: "absolute", ...noPosition }}
-              className="px-6 py-3 bg-gray-200 text-gray-700 font-semibold rounded-2xl shadow transition"
+              style={noPosition}
+              className="px-6 py-3 bg-gray-200 text-gray-700 
+              font-semibold rounded-2xl shadow"
             >
               No 🙈
             </button>
@@ -112,15 +168,21 @@ export default function ValentineWebsite() {
         </motion.div>
       ) : (
         <motion.div
-          initial={{ scale: 0.5, opacity: 0 }}
-          animate={{ scale: 1.2, opacity: 1 }}
-          className="text-center z-10"
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", duration: 0.8 }}
+          className="relative z-10 
+          bg-white/90 backdrop-blur-xl 
+          p-8 rounded-3xl shadow-xl 
+          max-w-lg text-center"
         >
-          <h1 className="text-5xl font-extrabold text-pink-600 drop-shadow-lg">
-            YAY!!! ❤️❤️❤️
-          </h1>
-          <p className="text-xl mt-4 text-gray-700">
-            Best decision ever 😌✨
+          <h2 className="text-4xl font-bold text-pink-600 mb-4">
+            YAY!!! ❤️
+          </h2>
+
+          <p className="text-gray-700 text-lg">
+            From the moment I met you, life became brighter.
+            This is just the beginning of our story ✨
           </p>
         </motion.div>
       )}
